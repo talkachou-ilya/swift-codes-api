@@ -32,7 +32,7 @@ func New(cfg config.Config) *App {
 }
 
 func Start(a *App) {
-	err := a.Router.Run(a.Config.Port)
+	err := a.Router.Run(":" + a.Config.Port)
 	if err != nil {
 		log.Fatal(err)
 	}
