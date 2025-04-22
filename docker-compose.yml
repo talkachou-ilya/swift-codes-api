@@ -25,5 +25,15 @@ services:
     volumes:
       - mongo-data:/data/db
 
+  mongo-seed:
+    build: ./seed
+    environment:
+      MONGO_USERNAME: ${DB_USERNAME}
+      MONGO_PASSWORD: ${DB_PASSWORD}
+      MONGO_NAME: ${DB_NAME}
+    depends_on:
+      - mongo
+
+
 volumes:
   mongo-data:
