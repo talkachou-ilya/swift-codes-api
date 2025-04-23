@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strings"
 	"swift-codes-api/internal/config"
 	"swift-codes-api/repositories/interfaces"
 )
@@ -46,4 +47,29 @@ func (h *SwiftCodesHandler) GetSwiftCode(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, result)
+}
+
+func (h *SwiftCodesHandler) GetSwiftCodesByCountry(c *gin.Context) {
+	countryISO2 := c.Param("countryISO2code")
+
+	if len(countryISO2) != 2 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid country code format. Must be a 2-letter ISO country code",
+		})
+		return
+	}
+
+	countryISO2 = strings.ToUpper(countryISO2)
+
+	swiftCodes, countryName, err := h.repo.FindByCountryISO2(context.TODO(), countryISO2)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": "No SWIFT codes found for this country"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"countryISO2": countryISO2,
+		"countryName": countryName,
+		"swiftCodes":  swiftCodes,
+	})
 }

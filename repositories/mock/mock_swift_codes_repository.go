@@ -25,3 +25,11 @@ func (m *SwiftRepository) FindBranchesByPrefix(ctx context.Context, prefix strin
 	}
 	return nil, args.Error(1)
 }
+
+func (m *SwiftRepository) FindByCountryISO2(ctx context.Context, countryISO2 string) ([]models.SwiftCode, string, error) {
+	args := m.Called(ctx, countryISO2)
+	if args.Get(0) != nil && args.Get(1) != nil {
+		return args.Get(0).([]models.SwiftCode), args.String(1), args.Error(2)
+	}
+	return nil, "", args.Error(2)
+}
