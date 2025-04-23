@@ -38,3 +38,8 @@ func (m *SwiftRepository) AddSwiftCode(ctx context.Context, swiftCode models.Swi
 	args := m.Called(ctx, swiftCode)
 	return args.Error(0)
 }
+
+func (m *SwiftRepository) DeleteSwiftCode(ctx context.Context, code string) error {
+	args := m.Called(ctx, code)
+	return args.Error(0)
+}

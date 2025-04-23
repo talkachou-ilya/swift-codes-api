@@ -10,4 +10,5 @@ type SwiftRepository interface {
 	FindBranchesByPrefix(ctx context.Context, prefix string) ([]models.SwiftCode, error)
 	FindByCountryISO2(ctx context.Context, countryISO2 string) ([]models.SwiftCode, string, error)
 	AddSwiftCode(ctx context.Context, swiftCode models.SwiftCode) error
+	DeleteSwiftCode(ctx context.Context, code string) error
 }

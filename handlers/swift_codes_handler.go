@@ -119,3 +119,21 @@ func (h *SwiftCodesHandler) AddSwiftCode(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{"message": "SWIFT code added successfully"})
 }
+
+func (h *SwiftCodesHandler) DeleteSwiftCode(c *gin.Context) {
+	code := c.Param("swift-code")
+
+	_, err := h.repo.FindByCode(context.TODO(), code)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": "SWIFT code not found"})
+		return
+	}
+
+	err = h.repo.DeleteSwiftCode(context.TODO(), code)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to delete SWIFT code"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "SWIFT code deleted successfully"})
+}
