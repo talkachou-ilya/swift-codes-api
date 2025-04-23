@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"swift-codes-api/handlers"
 	"swift-codes-api/internal/config"
-	mockRep "swift-codes-api/repositories/mock"
+	mockRepos "swift-codes-api/repositories/mock"
 )
 
 func TestGetSwiftCode(t *testing.T) {
@@ -18,7 +18,7 @@ func TestGetSwiftCode(t *testing.T) {
 
 	for _, tc := range test_cases.GetSwiftCodeTestCases() {
 		t.Run(tc.Name, func(t *testing.T) {
-			mockRepo := new(mockRep.SwiftRepository)
+			mockRepo := new(mockRepos.SwiftRepository)
 			tc.SetupMocks(mockRepo)
 
 			handler := handlers.NewSwiftHandler(config.Config{}, mockRepo)
