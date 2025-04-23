@@ -5,15 +5,26 @@ services:
       - ${PORT}:8080
     environment:
       PORT: ${PORT}
-      MONGO_URI: mongodb://${DB_USERNAME}:${DB_PASSWORD}@mongo:27017/
+      DB_URI: mongodb://${DB_USERNAME}:${DB_PASSWORD}@mongo:27017/
       DB_NAME: ${DB_NAME}
     develop:
       watch:
         - path: .
           action: rebuild
-
     depends_on:
       - mongo
+
+  api-test:
+    build: .
+    ports:
+      - ${TEST_PORT}:8081
+    environment:
+      PORT: ${TEST_PORT}
+      DB_URI: mongodb://${DB_USERNAME}:${DB_PASSWORD}@mongo-test:27017/
+      DB_NAME: ${DB_NAME}
+    command: go test ./tests/integration/... -v
+    depends_on:
+      - mongo-test
 
   mongo:
     image: mongo:8
@@ -24,6 +35,16 @@ services:
       MONGO_INITDB_DATABASE: ${DB_NAME}
     volumes:
       - mongo-data:/data/db
+
+  mongo-test:
+    image: mongo:8
+    restart: always
+    ports:
+      - "27018:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${DB_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD}
+      MONGO_INITDB_DATABASE: ${DB_NAME}
 
   mongo-seed:
     build: ./seed
