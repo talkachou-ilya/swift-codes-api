@@ -20,24 +20,30 @@ type IntegrationTestCase struct {
 func GetIntegrationTestCases() []IntegrationTestCase {
 	return []IntegrationTestCase{
 		{
-			Name:      "Valid headquarter SWIFT code with branch",
-			SwiftCode: "TESTUSXXHQ",
+			Name:      "Headquarter SWIFT code with branches",
+			SwiftCode: "CITIUS33XXX",
 			SetupData: func(ctx context.Context, db *mongo.Database) {
+				_, err := db.Collection("swift-codes").DeleteMany(ctx, bson.M{})
+				if err != nil {
+					log.Printf("Error clearing collection: %v", err)
+					return
+				}
+
 				hq := models.SwiftCode{
-					SwiftCode:     "TESTUSXXHQ",
-					SwiftPrefix:   "TESTUSXX",
+					SwiftCode:     "CITIUS33XXX",
+					SwiftPrefix:   "CITIUS",
 					IsHeadquarter: true,
-					BankName:      "Test HQ Bank",
-					Address:       "HQ Street",
+					BankName:      "Citibank",
+					Address:       "388 Greenwich Street, New York",
 					CountryISO2:   "US",
 					CountryName:   "United States",
 				}
 				branch := models.SwiftCode{
-					SwiftCode:     "TESTUSXX01",
-					SwiftPrefix:   "TESTUSXX",
+					SwiftCode:     "CITIUS22XXX",
+					SwiftPrefix:   "CITIUS",
 					IsHeadquarter: false,
-					BankName:      "Test HQ Bank",
-					Address:       "Branch Street",
+					BankName:      "Citibank",
+					Address:       "1 Court Square, Long Island City",
 					CountryISO2:   "US",
 					CountryName:   "United States",
 				}
@@ -45,24 +51,24 @@ func GetIntegrationTestCases() []IntegrationTestCase {
 				insertResult, insertErr := db.Collection("swift-codes").InsertMany(ctx, []interface{}{hq, branch})
 				log.Printf("Insert result: %+v, Error: %v", insertResult, insertErr)
 				documents, _ := db.Collection("swift-codes").CountDocuments(ctx, bson.M{})
-				log.Println(documents)
+				log.Println("Documents in collection:", documents)
 			},
 			ExpectedStatusCode: http.StatusOK,
 			ExpectedResponse: `{
-				"address": "HQ Street",
-				"bankName": "Test HQ Bank",
+				"address": "388 Greenwich Street, New York",
+				"bankName": "Citibank",
 				"countryISO2": "US",
 				"countryName": "United States",
 				"isHeadquarter": true,
-				"swiftCode": "TESTUSXXHQ",
+				"swiftCode": "CITIUS33XXX",
 				"branches": [
 					{
-						"address": "Branch Street",
-						"bankName": "Test HQ Bank",
+						"address": "1 Court Square, Long Island City",
+						"bankName": "Citibank",
 						"countryISO2": "US",
 						"countryName": "United States",
 						"isHeadquarter": false,
-						"swiftCode": "TESTUSXX01"
+						"swiftCode": "CITIUS22XXX"
 					}
 				]
 			}`,

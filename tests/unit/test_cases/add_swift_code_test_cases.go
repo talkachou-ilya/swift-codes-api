@@ -19,27 +19,27 @@ type AddSwiftCodeTestCase struct {
 func GetAddSwiftCodeTestCases() []AddSwiftCodeTestCase {
 	return []AddSwiftCodeTestCase{
 		{
-			Name: "valid swift code",
+			Name: "Valid SWIFT code",
 			RequestBody: `{
-				"swiftCode": "AAAAUS33",
-				"bankName": "BANK OF AMERICA",
+				"swiftCode": "ABCDUS12XXX",
+				"bankName": "Bank of America",
 				"countryISO2": "us",
 				"countryName": "United States",
-				"address": "123 MAIN ST, NEW YORK",
+				"address": "123 Main St, New York",
 				"isHeadquarter": true
 			}`,
 			SetupMocks: func(repo *mockRepo.SwiftRepository) {
 				repo.On("AddSwiftCode", mock.Anything, mock.MatchedBy(func(sc models.SwiftCode) bool {
-					return sc.SwiftCode == "AAAAUS33" && sc.CountryISO2 == "US"
+					return sc.SwiftCode == "ABCDUS12XXX" && sc.CountryISO2 == "US"
 				})).Return(nil)
 			},
 			ExpectedStatus:   http.StatusCreated,
 			ExpectedResponse: `{"message":"SWIFT code added successfully"}`,
 		},
 		{
-			Name: "missing required fields",
+			Name: "Missing required fields",
 			RequestBody: `{
-				"swiftCode": "AAAAUS33",
+				"swiftCode": "ABCDUS12XXX",
 				"bankName": "",
 				"countryISO2": "US",
 				"countryName": "United States",
@@ -50,13 +50,13 @@ func GetAddSwiftCodeTestCases() []AddSwiftCodeTestCase {
 			ExpectedResponse: `{"message":"Missing required fields"}`,
 		},
 		{
-			Name: "invalid country code format",
+			Name: "Invalid country code format",
 			RequestBody: `{
-				"swiftCode": "AAAAUS33",
-				"bankName": "BANK OF AMERICA",
+				"swiftCode": "ABCDUS12XXX",
+				"bankName": "Bank of America",
 				"countryISO2": "USA",
 				"countryName": "United States",
-				"address": "123 MAIN ST, NEW YORK",
+				"address": "123 Main St, New York",
 				"isHeadquarter": true
 			}`,
 			SetupMocks:       func(repo *mockRepo.SwiftRepository) {},
@@ -64,45 +64,59 @@ func GetAddSwiftCodeTestCases() []AddSwiftCodeTestCase {
 			ExpectedResponse: `{"message":"Invalid country code format. Must be a 2-letter ISO country code"}`,
 		},
 		{
-			Name: "invalid swift code format - too short",
+			Name: "Invalid SWIFT code format",
 			RequestBody: `{
-				"swiftCode": "AAAA",
-				"bankName": "BANK OF AMERICA",
+				"swiftCode": "INVALID",
+				"bankName": "Bank of America",
 				"countryISO2": "US",
 				"countryName": "United States",
-				"address": "123 MAIN ST, NEW YORK",
+				"address": "123 Main St, New York",
 				"isHeadquarter": true
 			}`,
 			SetupMocks:       func(repo *mockRepo.SwiftRepository) {},
 			ExpectedStatus:   http.StatusBadRequest,
-			ExpectedResponse: `{"message":"Invalid SWIFT code format. Must be 8 or 11 characters"}`,
+			ExpectedResponse: `{"message":"Invalid SWIFT code format. Must be 11 characters and follow proper format"}`,
 		},
 		{
-			Name: "swift code already exists",
+			Name: "Country code mismatch in SWIFT code",
 			RequestBody: `{
-				"swiftCode": "AAAAUS33",
-				"bankName": "BANK OF AMERICA",
+				"swiftCode": "ABCDJP12XXX",
+				"bankName": "Bank of America",
 				"countryISO2": "US",
 				"countryName": "United States",
-				"address": "123 MAIN ST, NEW YORK",
+				"address": "123 Main St, New York",
+				"isHeadquarter": true
+			}`,
+			SetupMocks:       func(repo *mockRepo.SwiftRepository) {},
+			ExpectedStatus:   http.StatusBadRequest,
+			ExpectedResponse: `{"message":"Country code in SWIFT code does not match the provided country code"}`,
+		},
+		{
+			Name: "SWIFT code already exists",
+			RequestBody: `{
+				"swiftCode": "ABCDUS12XXX",
+				"bankName": "Bank of America",
+				"countryISO2": "US",
+				"countryName": "United States",
+				"address": "123 Main St, New York",
 				"isHeadquarter": true
 			}`,
 			SetupMocks: func(repo *mockRepo.SwiftRepository) {
 				repo.On("AddSwiftCode", mock.Anything, mock.MatchedBy(func(sc models.SwiftCode) bool {
-					return sc.SwiftCode == "AAAAUS33"
-				})).Return(errors.New("SWIFT code AAAAUS33 already exists"))
+					return sc.SwiftCode == "ABCDUS12XXX"
+				})).Return(errors.New("SWIFT code ABCDUS12XXX already exists"))
 			},
 			ExpectedStatus:   http.StatusConflict,
-			ExpectedResponse: `{"message":"SWIFT code AAAAUS33 already exists"}`,
+			ExpectedResponse: `{"message":"SWIFT code ABCDUS12XXX already exists"}`,
 		},
 		{
-			Name: "server error",
+			Name: "Server error",
 			RequestBody: `{
-				"swiftCode": "AAAAUS33",
-				"bankName": "BANK OF AMERICA",
+				"swiftCode": "ABCDUS12XXX",
+				"bankName": "Bank of America",
 				"countryISO2": "US",
 				"countryName": "United States",
-				"address": "123 MAIN ST, NEW YORK",
+				"address": "123 Main St, New York",
 				"isHeadquarter": true
 			}`,
 			SetupMocks: func(repo *mockRepo.SwiftRepository) {
@@ -110,6 +124,20 @@ func GetAddSwiftCodeTestCases() []AddSwiftCodeTestCase {
 			},
 			ExpectedStatus:   http.StatusInternalServerError,
 			ExpectedResponse: `{"message":"Failed to add SWIFT code"}`,
+		},
+		{
+			Name: "Invalid JSON format",
+			RequestBody: `{
+				"swiftCode": "ABCDUS12XXX",
+				"bankName": "Bank of America",
+				"countryISO2": "US",
+				"countryName": "United States",
+				"address": "123 Main St, New York",
+				"isHeadquarter": true,
+			}`,
+			SetupMocks:       func(repo *mockRepo.SwiftRepository) {},
+			ExpectedStatus:   http.StatusBadRequest,
+			ExpectedResponse: `{"message":"Invalid request format"}`,
 		},
 	}
 }

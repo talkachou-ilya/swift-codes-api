@@ -3,11 +3,13 @@ package handlers
 import (
 	"context"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 	"strings"
 	"swift-codes-api/internal/config"
 	"swift-codes-api/models"
 	"swift-codes-api/repositories/interfaces"
+	"swift-codes-api/utils"
 )
 
 type SwiftCodesHandler struct {
@@ -24,6 +26,13 @@ func NewSwiftHandler(cfg config.Config, repo interfaces.SwiftRepository) *SwiftC
 
 func (h *SwiftCodesHandler) GetSwiftCode(c *gin.Context) {
 	code := c.Param("swift-code")
+
+	if !utils.ValidateSwiftCode(code) {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid SWIFT code format.",
+		})
+		return
+	}
 
 	result, err := h.repo.FindByCode(context.TODO(), code)
 	if err != nil {
@@ -53,9 +62,11 @@ func (h *SwiftCodesHandler) GetSwiftCode(c *gin.Context) {
 func (h *SwiftCodesHandler) GetSwiftCodesByCountry(c *gin.Context) {
 	countryISO2 := c.Param("countryISO2code")
 
-	if len(countryISO2) != 2 {
+	log.Println(countryISO2)
+
+	if !utils.ValidateCountryCode(countryISO2) {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid country code format. Must be a 2-letter ISO country code",
+			"message": "Invalid country code format. Must be a 2-letter ISO country code",
 		})
 		return
 	}
@@ -90,7 +101,7 @@ func (h *SwiftCodesHandler) AddSwiftCode(c *gin.Context) {
 		return
 	}
 
-	if len(swiftCode.CountryISO2) != 2 {
+	if !utils.ValidateCountryCode(swiftCode.CountryISO2) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "Invalid country code format. Must be a 2-letter ISO country code",
 		})
@@ -99,10 +110,16 @@ func (h *SwiftCodesHandler) AddSwiftCode(c *gin.Context) {
 
 	swiftCode.CountryISO2 = strings.ToUpper(swiftCode.CountryISO2)
 
-	swiftCodeLength := len(swiftCode.SwiftCode)
-	if swiftCodeLength != 8 && swiftCodeLength != 11 {
+	if !utils.ValidateSwiftCode(swiftCode.SwiftCode) {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Invalid SWIFT code format. Must be 8 or 11 characters",
+			"message": "Invalid SWIFT code format. Must be 11 characters and follow proper format",
+		})
+		return
+	}
+
+	if !strings.Contains(swiftCode.SwiftCode, swiftCode.CountryISO2) {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Country code in SWIFT code does not match the provided country code",
 		})
 		return
 	}
@@ -122,6 +139,13 @@ func (h *SwiftCodesHandler) AddSwiftCode(c *gin.Context) {
 
 func (h *SwiftCodesHandler) DeleteSwiftCode(c *gin.Context) {
 	code := c.Param("swift-code")
+
+	if !utils.ValidateSwiftCode(code) {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid SWIFT code format",
+		})
+		return
+	}
 
 	_, err := h.repo.FindByCode(context.TODO(), code)
 	if err != nil {

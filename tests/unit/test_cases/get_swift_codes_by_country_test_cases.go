@@ -1,8 +1,11 @@
 package test_cases
 
 import (
+	"net/http"
+
 	"github.com/stretchr/testify/mock"
 	"go.mongodb.org/mongo-driver/mongo"
+
 	"swift-codes-api/models"
 	mockRepo "swift-codes-api/repositories/mock"
 )
@@ -18,24 +21,24 @@ type CountryTestCase struct {
 func GetCountryTestCases() []CountryTestCase {
 	return []CountryTestCase{
 		{
-			Name:        "valid country code",
+			Name:        "Valid country code with multiple banks",
 			CountryISO2: "US",
 			SetupMocks: func(repo *mockRepo.SwiftRepository) {
 				swiftCodes := []models.SwiftCode{
 					{
-						SwiftCode:     "AAAAUS33XXX",
-						BankName:      "BANK OF AMERICA",
+						SwiftCode:     "CITIUS33XXX",
+						BankName:      "Citibank",
 						CountryISO2:   "US",
 						CountryName:   "United States",
-						Address:       "123 MAIN ST, NEW YORK",
+						Address:       "388 Greenwich Street, New York",
 						IsHeadquarter: true,
 					},
 					{
-						SwiftCode:     "BBBBUS44XXX",
-						BankName:      "CHASE BANK",
+						SwiftCode:     "CHASUS33XXX",
+						BankName:      "JP Morgan Chase Bank",
 						CountryISO2:   "US",
 						CountryName:   "United States",
-						Address:       "456 OAK ST, CHICAGO",
+						Address:       "270 Park Avenue, New York",
 						IsHeadquarter: true,
 					},
 				}
@@ -45,48 +48,91 @@ func GetCountryTestCases() []CountryTestCase {
 					nil,
 				)
 			},
-			ExpectedStatus: 200,
+			ExpectedStatus: http.StatusOK,
 			ExpectedResponse: `{
 				"countryISO2": "US",
 				"countryName": "United States",
 				"swiftCodes": [
 					{
-						"swiftCode": "AAAAUS33XXX",
-						"bankName": "BANK OF AMERICA",
+						"swiftCode": "CITIUS33XXX",
+						"bankName": "Citibank",
 						"countryISO2": "US",
 						"countryName": "United States",
-						"address": "123 MAIN ST, NEW YORK",
+						"address": "388 Greenwich Street, New York",
 						"isHeadquarter": true
 					},
 					{
-						"swiftCode": "BBBBUS44XXX",
-						"bankName": "CHASE BANK",
+						"swiftCode": "CHASUS33XXX",
+						"bankName": "JP Morgan Chase Bank",
 						"countryISO2": "US",
 						"countryName": "United States",
-						"address": "456 OAK ST, CHICAGO",
+						"address": "270 Park Avenue, New York",
 						"isHeadquarter": true
 					}
 				]
 			}`,
 		},
 		{
-			Name:             "invalid country code length",
-			CountryISO2:      "USA",
-			SetupMocks:       func(repo *mockRepo.SwiftRepository) {},
-			ExpectedStatus:   400,
-			ExpectedResponse: `{"error":"Invalid country code format. Must be a 2-letter ISO country code"}`,
+			Name:        "Valid country code with single bank",
+			CountryISO2: "lu",
+			SetupMocks: func(repo *mockRepo.SwiftRepository) {
+				swiftCodes := []models.SwiftCode{
+					{
+						SwiftCode:     "BCEELULL",
+						BankName:      "Banque et Caisse d'Epargne de l'Etat",
+						CountryISO2:   "LU",
+						CountryName:   "Luxembourg",
+						Address:       "1, Place de Metz, Luxembourg",
+						IsHeadquarter: true,
+					},
+				}
+				repo.On("FindByCountryISO2", mock.Anything, "LU").Return(
+					swiftCodes,
+					"Luxembourg",
+					nil,
+				)
+			},
+			ExpectedStatus: http.StatusOK,
+			ExpectedResponse: `{
+				"countryISO2": "LU",
+				"countryName": "Luxembourg",
+				"swiftCodes": [
+					{
+						"swiftCode": "BCEELULL",
+						"bankName": "Banque et Caisse d'Epargne de l'Etat",
+						"countryISO2": "LU",
+						"countryName": "Luxembourg",
+						"address": "1, Place de Metz, Luxembourg",
+						"isHeadquarter": true
+					}
+				]
+			}`,
 		},
 		{
-			Name:        "country not found",
-			CountryISO2: "FR",
+			Name:             "Invalid country code length",
+			CountryISO2:      "USA",
+			SetupMocks:       func(repo *mockRepo.SwiftRepository) {},
+			ExpectedStatus:   http.StatusBadRequest,
+			ExpectedResponse: `{"message":"Invalid country code format. Must be a 2-letter ISO country code"}`,
+		},
+		{
+			Name:             "Invalid country code format (numbers)",
+			CountryISO2:      "12",
+			SetupMocks:       func(repo *mockRepo.SwiftRepository) {},
+			ExpectedStatus:   http.StatusBadRequest,
+			ExpectedResponse: `{"message":"Invalid country code format. Must be a 2-letter ISO country code"}`,
+		},
+		{
+			Name:        "Country with no banks",
+			CountryISO2: "ZZ",
 			SetupMocks: func(repo *mockRepo.SwiftRepository) {
-				repo.On("FindByCountryISO2", mock.Anything, "FR").Return(
+				repo.On("FindByCountryISO2", mock.Anything, "ZZ").Return(
 					[]models.SwiftCode{},
 					"",
 					mongo.ErrNoDocuments,
 				)
 			},
-			ExpectedStatus:   404,
+			ExpectedStatus:   http.StatusNotFound,
 			ExpectedResponse: `{"message":"No SWIFT codes found for this country"}`,
 		},
 	}

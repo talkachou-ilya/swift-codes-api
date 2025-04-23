@@ -63,9 +63,7 @@ func (r *SwiftRepository) FindByCountryISO2(ctx context.Context, countryISO2 str
 }
 
 func (r *SwiftRepository) AddSwiftCode(ctx context.Context, swiftCode models.SwiftCode) error {
-	if len(swiftCode.SwiftCode) >= 6 {
-		swiftCode.SwiftPrefix = swiftCode.SwiftCode[:6]
-	}
+	swiftCode.SwiftPrefix = swiftCode.SwiftCode[:8]
 
 	var existing models.SwiftCode
 	err := r.col.FindOne(ctx, bson.M{"swiftCode": swiftCode.SwiftCode}).Decode(&existing)

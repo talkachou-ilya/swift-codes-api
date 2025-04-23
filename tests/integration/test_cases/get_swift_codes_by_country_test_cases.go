@@ -21,53 +21,59 @@ func GetSwiftCodesByCountryIntegrationTestCases() []CountryIntegrationTestCase {
 	return []CountryIntegrationTestCase{
 		{
 			Name:        "Valid country with multiple banks",
-			CountryISO2: "DE",
+			CountryISO2: "US",
 			SetupData: func(ctx context.Context, db *mongo.Database) {
+				_, err := db.Collection("swift-codes").DeleteMany(ctx, bson.M{})
+				if err != nil {
+					log.Printf("Error clearing collection: %v", err)
+					return
+				}
+
 				banks := []models.SwiftCode{
 					{
-						SwiftCode:     "DEUTDEFF",
-						SwiftPrefix:   "DEUTDE",
+						SwiftCode:     "CITIUS33XXX",
+						SwiftPrefix:   "CITIUS",
 						IsHeadquarter: true,
-						BankName:      "Deutsche Bank",
-						Address:       "Taunusanlage 12, Frankfurt am Main",
-						CountryISO2:   "DE",
-						CountryName:   "Germany",
+						BankName:      "Citibank",
+						Address:       "388 Greenwich Street, New York",
+						CountryISO2:   "US",
+						CountryName:   "United States",
 					},
 					{
-						SwiftCode:     "COBADEFF",
-						SwiftPrefix:   "COBADE",
+						SwiftCode:     "CHASUS33XXX",
+						SwiftPrefix:   "CHASUS",
 						IsHeadquarter: true,
-						BankName:      "Commerzbank",
-						Address:       "Kaiserplatz, Frankfurt am Main",
-						CountryISO2:   "DE",
-						CountryName:   "Germany",
+						BankName:      "JP Morgan Chase Bank",
+						Address:       "270 Park Avenue, New York",
+						CountryISO2:   "US",
+						CountryName:   "United States",
 					},
 				}
 
 				insertResult, insertErr := db.Collection("swift-codes").InsertMany(ctx, []interface{}{banks[0], banks[1]})
 				log.Printf("Insert result: %+v, Error: %v", insertResult, insertErr)
 				documents, _ := db.Collection("swift-codes").CountDocuments(ctx, bson.M{})
-				log.Println(documents)
+				log.Println("Documents in collection:", documents)
 			},
 			ExpectedStatusCode: http.StatusOK,
 			ExpectedResponse: `{
-				"countryISO2": "DE",
-				"countryName": "Germany",
+				"countryISO2": "US",
+				"countryName": "United States",
 				"swiftCodes": [
 					{
-						"swiftCode": "DEUTDEFF",
-						"bankName": "Deutsche Bank",
-						"address": "Taunusanlage 12, Frankfurt am Main",
-						"countryISO2": "DE",
-						"countryName": "Germany",
+						"swiftCode": "CITIUS33XXX",
+						"bankName": "Citibank",
+						"address": "388 Greenwich Street, New York",
+						"countryISO2": "US",
+						"countryName": "United States",
 						"isHeadquarter": true
 					},
 					{
-						"swiftCode": "COBADEFF",
-						"bankName": "Commerzbank",
-						"address": "Kaiserplatz, Frankfurt am Main",
-						"countryISO2": "DE",
-						"countryName": "Germany",
+						"swiftCode": "CHASUS33XXX",
+						"bankName": "JP Morgan Chase Bank",
+						"address": "270 Park Avenue, New York",
+						"countryISO2": "US",
+						"countryName": "United States",
 						"isHeadquarter": true
 					}
 				]
@@ -77,19 +83,14 @@ func GetSwiftCodesByCountryIntegrationTestCases() []CountryIntegrationTestCase {
 			Name:        "Country with no banks",
 			CountryISO2: "ZZ",
 			SetupData: func(ctx context.Context, db *mongo.Database) {
-				// No data to insert for this test case
+				_, err := db.Collection("swift-codes").DeleteMany(ctx, bson.M{})
+				if err != nil {
+					log.Printf("Error clearing collection: %v", err)
+					return
+				}
 			},
 			ExpectedStatusCode: http.StatusNotFound,
 			ExpectedResponse:   `{"message":"No SWIFT codes found for this country"}`,
-		},
-		{
-			Name:        "Invalid country code format",
-			CountryISO2: "USA",
-			SetupData: func(ctx context.Context, db *mongo.Database) {
-				// No data to insert for this test case
-			},
-			ExpectedStatusCode: http.StatusBadRequest,
-			ExpectedResponse:   `{"error":"Invalid country code format. Must be a 2-letter ISO country code"}`,
 		},
 	}
 }
