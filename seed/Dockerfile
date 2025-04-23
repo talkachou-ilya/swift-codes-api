@@ -10,7 +10,7 @@ CMD mongoimport --host mongo \
     --username "${MONGO_USERNAME}" \
     --password "${MONGO_PASSWORD}" \
     --authenticationDatabase admin \
-    --collection swiftcodes \
+    --collection swift-codes \
     --file swiftcodes.json \
     --jsonArray \
     --drop
