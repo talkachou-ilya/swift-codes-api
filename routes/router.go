@@ -16,5 +16,6 @@ func SetupRoutes(r *gin.Engine, db *mongo.Database, cfg config.Config) {
 		v1.GET("/:swift-code", h.GetSwiftCode)
 		v1.GET("/country/:countryISO2code", h.GetSwiftCodesByCountry)
 		v1.POST("", h.AddSwiftCode)
+		v1.DELETE("/:swift-code", h.DeleteSwiftCode)
 	}
 }

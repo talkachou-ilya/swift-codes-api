@@ -78,3 +78,16 @@ func (r *SwiftRepository) AddSwiftCode(ctx context.Context, swiftCode models.Swi
 	_, err = r.col.InsertOne(ctx, swiftCode)
 	return err
 }
+
+func (r *SwiftRepository) DeleteSwiftCode(ctx context.Context, code string) error {
+	result, err := r.col.DeleteOne(ctx, bson.M{"swiftCode": code})
+	if err != nil {
+		return err
+	}
+
+	if result.DeletedCount == 0 {
+		return mongo.ErrNoDocuments
+	}
+
+	return nil
+}
