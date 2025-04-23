@@ -39,3 +39,22 @@ func (r *SwiftRepository) FindBranchesByPrefix(ctx context.Context, prefix strin
 	err = cursor.All(ctx, &branches)
 	return branches, err
 }
+
+func (r *SwiftRepository) FindByCountryISO2(ctx context.Context, countryISO2 string) ([]models.SwiftCode, string, error) {
+	cursor, err := r.col.Find(ctx, bson.M{"countryISO2": countryISO2})
+
+	if err != nil {
+		return nil, "", err
+	}
+
+	var swiftCodes []models.SwiftCode
+	err = cursor.All(ctx, &swiftCodes)
+
+	if len(swiftCodes) == 0 {
+		return nil, "", mongo.ErrNoDocuments
+	}
+
+	countryName := swiftCodes[0].CountryName
+
+	return swiftCodes, countryName, err
+}

@@ -14,5 +14,6 @@ func SetupRoutes(r *gin.Engine, db *mongo.Database, cfg config.Config) {
 	v1 := r.Group("/v1/swift-codes")
 	{
 		v1.GET("/:swift-code", h.GetSwiftCode)
+		v1.GET("/country/:countryISO2code", h.GetSwiftCodesByCountry)
 	}
 }
