@@ -33,3 +33,8 @@ func (m *SwiftRepository) FindByCountryISO2(ctx context.Context, countryISO2 str
 	}
 	return nil, "", args.Error(2)
 }
+
+func (m *SwiftRepository) AddSwiftCode(ctx context.Context, swiftCode models.SwiftCode) error {
+	args := m.Called(ctx, swiftCode)
+	return args.Error(0)
+}

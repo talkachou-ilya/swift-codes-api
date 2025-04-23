@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 	"swift-codes-api/internal/config"
+	"swift-codes-api/models"
 	"swift-codes-api/repositories/interfaces"
 )
 
@@ -72,4 +73,49 @@ func (h *SwiftCodesHandler) GetSwiftCodesByCountry(c *gin.Context) {
 		"countryName": countryName,
 		"swiftCodes":  swiftCodes,
 	})
+}
+
+func (h *SwiftCodesHandler) AddSwiftCode(c *gin.Context) {
+	var swiftCode models.SwiftCode
+
+	if err := c.ShouldBindJSON(&swiftCode); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid request format"})
+		return
+	}
+
+	if swiftCode.SwiftCode == "" || swiftCode.BankName == "" ||
+		swiftCode.CountryISO2 == "" || swiftCode.CountryName == "" ||
+		swiftCode.Address == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Missing required fields"})
+		return
+	}
+
+	if len(swiftCode.CountryISO2) != 2 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid country code format. Must be a 2-letter ISO country code",
+		})
+		return
+	}
+
+	swiftCode.CountryISO2 = strings.ToUpper(swiftCode.CountryISO2)
+
+	swiftCodeLength := len(swiftCode.SwiftCode)
+	if swiftCodeLength != 8 && swiftCodeLength != 11 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid SWIFT code format. Must be 8 or 11 characters",
+		})
+		return
+	}
+
+	err := h.repo.AddSwiftCode(context.TODO(), swiftCode)
+	if err != nil {
+		if strings.Contains(err.Error(), "already exists") {
+			c.JSON(http.StatusConflict, gin.H{"message": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to add SWIFT code"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"message": "SWIFT code added successfully"})
 }
