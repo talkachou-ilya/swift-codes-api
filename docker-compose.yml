@@ -2,7 +2,7 @@ services:
   api:
     build: .
     ports:
-      - ${PORT}:8080
+      - ${PORT}:${PORT}
     environment:
       PORT: ${PORT}
       DB_URI: mongodb://${DB_USERNAME}:${DB_PASSWORD}@mongo:27017/
@@ -17,7 +17,7 @@ services:
   api-test:
     build: .
     ports:
-      - ${TEST_PORT}:8081
+      - ${TEST_PORT}:${TEST_PORT}
     environment:
       PORT: ${TEST_PORT}
       DB_URI: mongodb://${DB_USERNAME}:${DB_PASSWORD}@mongo-test:27017/
@@ -29,6 +29,8 @@ services:
   mongo:
     image: mongo:8
     restart: always
+    ports:
+      - ${DB_PORT}:27017
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${DB_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD}
@@ -40,7 +42,7 @@ services:
     image: mongo:8
     restart: always
     ports:
-      - "27018:27017"
+      - ${TEST_DB_PORT}:27017
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${DB_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD}
