@@ -2,10 +2,13 @@ package mongo
 
 import (
 	"context"
+	"errors"
 	"swift-codes-api/models"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+
+	"fmt"
 )
 
 type SwiftRepository struct {
@@ -57,4 +60,21 @@ func (r *SwiftRepository) FindByCountryISO2(ctx context.Context, countryISO2 str
 	countryName := swiftCodes[0].CountryName
 
 	return swiftCodes, countryName, err
+}
+
+func (r *SwiftRepository) AddSwiftCode(ctx context.Context, swiftCode models.SwiftCode) error {
+	if len(swiftCode.SwiftCode) >= 6 {
+		swiftCode.SwiftPrefix = swiftCode.SwiftCode[:6]
+	}
+
+	var existing models.SwiftCode
+	err := r.col.FindOne(ctx, bson.M{"swiftCode": swiftCode.SwiftCode}).Decode(&existing)
+	if err == nil {
+		return fmt.Errorf("SWIFT code %s already exists", swiftCode.SwiftCode)
+	} else if !errors.Is(err, mongo.ErrNoDocuments) {
+		return err
+	}
+
+	_, err = r.col.InsertOne(ctx, swiftCode)
+	return err
 }
